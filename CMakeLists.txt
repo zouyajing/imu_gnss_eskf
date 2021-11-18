@@ -8,8 +8,13 @@ find_package(catkin REQUIRED COMPONENTS
 )
 catkin_package()
 include_directories(
+ include/
+ ${EIGEN3_INCLUDE_DIR}
  ${catkin_INCLUDE_DIRS}
 )
+
+find_package(Eigen3  REQUIRED)
+
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
@@ -22,7 +27,8 @@ include_directories(
 # add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 
-add_executable(${PROJECT_NAME}_node src/imu_gnss_eskf_node.cpp)
+add_executable(${PROJECT_NAME}_node src/imu_gnss_eskf_node.cpp src/eskf.cpp)
 
 target_link_libraries(${PROJECT_NAME}_node
-   ${catkin_LIBRARIES} )
+   ${catkin_LIBRARIES}
+   Eigen3::Eigen)
