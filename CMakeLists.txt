@@ -5,30 +5,21 @@ add_compile_options(-std=c++14)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   nav_msgs
+  eigen_conversions
 )
 catkin_package()
+find_package(Eigen3  REQUIRED)
+find_package (GeographicLib REQUIRED)
+
 include_directories(
  include/
  ${EIGEN3_INCLUDE_DIR}
  ${catkin_INCLUDE_DIRS}
 )
 
-find_package(Eigen3  REQUIRED)
-
-
-## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/imu_gps_eskf.cpp
-# )
-
-## Add cmake target dependencies of the library
-## as an example, code may need to be generated before libraries
-## either from message generation or dynamic reconfigure
-# add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-
 add_executable(${PROJECT_NAME}_node src/imu_gnss_eskf_node.cpp src/eskf.cpp)
 
 target_link_libraries(${PROJECT_NAME}_node
    ${catkin_LIBRARIES}
-   Eigen3::Eigen)
+   Eigen3::Eigen
+   ${GeographicLib_LIBRARIES})

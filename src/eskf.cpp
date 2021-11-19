@@ -18,9 +18,10 @@ bool ESKF::process_IMU_Data(IMUDataPtr imu_data_ptr)
         if(imu_buffer_.size() > IMU_Buffer_Size) imu_buffer_.pop_front();
         return false;
     }
+    //std::cout<<"Initialized and predict."<<std::endl;
     predict(last_imu_ptr_, imu_data_ptr);
     last_imu_ptr_ = imu_data_ptr;
-    std::cout<<"Initialized and predict."<<std::endl;
+
 
     return true;
 }
@@ -58,7 +59,7 @@ void ESKF::predict(IMUDataPtr last_imu_ptr, IMUDataPtr cur_imu_ptr)
 
     Eigen::Matrix<double, 15, 15> Fx = Eigen::Matrix<double, 15, 15>::Identity();
     Fx.block<3, 3>(0, 3) = Eigen::Matrix3d::Identity() * dt;
-    Fx.block<3, 3>(3, 6) = -state_ptr_->R_G_I * SkewMatrix(acc_unbias) * dt;
+    Fx.block<3, 3>(3, 6) = -state_ptr_->R_G_I * skew_matrix(acc_unbias) * dt;
     Fx.block<3, 3>(3, 9) = -state_ptr_->R_G_I * dt;
     if (delta_angle_axis.norm() > DBL_EPSILON) {
         Fx.block<3, 3>(6, 6) = dR.transpose();
@@ -92,18 +93,55 @@ void ESKF::predict(IMUDataPtr last_imu_ptr, IMUDataPtr cur_imu_ptr)
     state_ptr_->cov = Fx * last_state.cov * Fx.transpose() + Fi * Qi * Fi.transpose();
 }
 
+void ESKF::update(GNSSDataPtr gnss_data_ptr)
+{
+    Eigen::Vector3d p_G_GNSS;
+    convert_lla_to_enu(init_lla_, gnss_data_ptr->lla, &p_G_GNSS);
+    Eigen::Vector3d &p_G_I = state_ptr_->p_G_I;
+    Eigen::Matrix3d &R_G_I = state_ptr_->R_G_I;
+
+    Eigen::Vector3d residual = p_G_GNSS - (p_G_I + R_G_I * p_I_GNSS_);
+    Eigen::Matrix<double, 3, 15> H;
+    H.setZero();
+    H.block<3, 3>(0, 0) = Eigen::Matrix3d::Identity();
+    H.block<3, 3>(0, 6) = - R_G_I * skew_matrix(p_I_GNSS_);
+    Eigen::Matrix3d &V = gnss_data_ptr->cov;
+
+
+    // ESKF
+    // K = P * Ht * ( H * P * Ht + V).inverse();
+    // dx = K * (y - h(x))
+    // P = (I - KH) * P
+    const Eigen::MatrixXd& P = state_ptr_->cov;
+    const Eigen::MatrixXd  K = P * H.transpose() * (H * P * H.transpose() + V).inverse();
+    const Eigen::VectorXd delta_x = K * residual;
+
+    // update state
+    state_ptr_->p_G_I     += delta_x.block<3, 1>(0, 0);
+    state_ptr_->v_G_I     += delta_x.block<3, 1>(3, 0);
+    state_ptr_->acc_bias  += delta_x.block<3, 1>(9, 0);
+    state_ptr_->gyro_bias += delta_x.block<3, 1>(12, 0);
+    if (delta_x.block<3, 1>(6, 0).norm() > DBL_EPSILON) {
+        state_ptr_->R_G_I *= Eigen::AngleAxisd(delta_x.block<3, 1>(6, 0).norm(), delta_x.block<3, 1>(6, 0).normalized()).toRotationMatrix();
+    }
+
+    // update covarance.
+    const Eigen::MatrixXd I_KH = Eigen::Matrix<double, 15, 15>::Identity() - K * H;
+    state_ptr_->cov = I_KH * P * I_KH.transpose() + K * V * K.transpose();
+}
+
 bool ESKF::process_GNSS_Data(GNSSDataPtr gnss_data_ptr)
 {
     if(!initialized_)
     {
         if(imu_buffer_.size() < IMU_Buffer_Size){
-            std::cout<<"[ESKF] No enough IMU data."<<std::endl;
+            std::cout<<"[ ESKF ] Wait. Insufficient IMU data."<<std::endl;
             return false;
         }
         last_imu_ptr_ = imu_buffer_.back();
         if(std::abs(last_imu_ptr_->timestamp - gnss_data_ptr->timestamp) > 0.2)
         {
-            std::cout<<"[ESKF] GNSS and IMU are not sychonized."<<std::endl;
+            std::cout<<"[ ESKF ] GNSS and IMU are not sychonized."<<std::endl;
             return false;
         }
         bool ok = initialize();
@@ -111,6 +149,7 @@ bool ESKF::process_GNSS_Data(GNSSDataPtr gnss_data_ptr)
         init_lla_ = gnss_data_ptr->lla;
         initialized_ = true;
     }
+    update(gnss_data_ptr);
     return true;
 }
 
@@ -121,15 +160,17 @@ bool ESKF::initialize(void)
         sum_acc += imu_data->acc;
     }
     const Eigen::Vector3d mean_acc = sum_acc / (double)imu_buffer_.size();
-    std::cout<<"[ESKF] Mean acc: "<<mean_acc[0]<<" "<<mean_acc[1]<<" "<<mean_acc[2]<<std::endl;
+    std::cout<<"[ ESKF ] Mean acc: "<<mean_acc[0]<<" "<<mean_acc[1]<<" "<<mean_acc[2]<<std::endl;
 
     Eigen::Vector3d sum_err2(0., 0., 0.);
     for (auto imu_data : imu_buffer_) sum_err2 += (imu_data->acc - mean_acc).cwiseAbs2();
     const Eigen::Vector3d std_acc = (sum_err2 / (double)imu_buffer_.size()).cwiseSqrt();
     if (std_acc.maxCoeff() > IMU_Std) {
-        std::cout<<"[ESKF] Big acc std: "<<std_acc[0]<<" "<<std_acc[1]<<" "<<std_acc[2]<<std::endl;
+        std::cout<<"[ ESKF ] Big acc std: "<<std_acc[0]<<" "<<std_acc[1]<<" "<<std_acc[2]<<std::endl;
         return false;
     }
+
+    // z-axis
     const Eigen::Vector3d &z_axis = mean_acc.normalized();
 
     // x-axis
@@ -147,7 +188,7 @@ bool ESKF::initialize(void)
 
     state_ptr_->R_G_I = R_I_G.transpose();
     state_ptr_->timestamp = last_imu_ptr_->timestamp;
-    state_ptr_->imu_data_ptr = last_imu_ptr_;
+    //state_ptr_->imu_data_ptr = last_imu_ptr_;
     state_ptr_->p_G_I.setZero();
     state_ptr_->v_G_I.setZero();
     state_ptr_->acc_bias.setZero();
@@ -159,9 +200,6 @@ bool ESKF::initialize(void)
     state_ptr_->cov(8, 8) = 10000. * D_R * D_R;
     state_ptr_->cov.block<3, 3>(9, 9) = 0.0004 * Eigen::Matrix3d::Identity();
     state_ptr_->cov.block<3, 3>(12, 12) = 0.0004 * Eigen::Matrix3d::Identity();
-
-
-
 
     return true;
 }

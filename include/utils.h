@@ -11,6 +11,8 @@
 #include <cfloat>
 
 
+
+
 constexpr double D_R = M_PI / 180.;
 constexpr double R_D = 180. / M_PI;
 constexpr double g = 9.81007;
@@ -23,6 +25,7 @@ struct IMUData{
     Eigen::Vector3d gyro;
 };
 using IMUDataPtr = std::shared_ptr<IMUData>;
+
 struct GNSSData
 {
     double timestamp;
@@ -30,10 +33,9 @@ struct GNSSData
     Eigen::Matrix3d cov;
 };
 using GNSSDataPtr = std::shared_ptr<GNSSData>;
+
 struct State{
     double timestamp;
-
-    Eigen::Vector3d lla;
 
     Eigen::Vector3d p_G_I;
     Eigen::Vector3d v_G_I;
@@ -41,15 +43,13 @@ struct State{
     Eigen::Vector3d acc_bias;
     Eigen::Vector3d gyro_bias;
 
-    // Covariance.
     Eigen::Matrix<double, 15, 15> cov;
 
-    // The imu data.
-    IMUDataPtr imu_data_ptr;
 };
 using StatePtr = std::shared_ptr<State>;
 
-inline void ConvertLLAToENU(const Eigen::Vector3d& init_lla,
+
+inline void convert_lla_to_enu(const Eigen::Vector3d& init_lla,
                             const Eigen::Vector3d& point_lla,
                             Eigen::Vector3d* point_enu) {
     static GeographicLib::LocalCartesian local_cartesian;
@@ -58,7 +58,7 @@ inline void ConvertLLAToENU(const Eigen::Vector3d& init_lla,
                             point_enu->data()[0], point_enu->data()[1], point_enu->data()[2]);
 }
 
-inline void ConvertENUToLLA(const Eigen::Vector3d& init_lla,
+inline void convert_enu_to_lla(const Eigen::Vector3d& init_lla,
                             const Eigen::Vector3d& point_enu,
                             Eigen::Vector3d* point_lla) {
     static GeographicLib::LocalCartesian local_cartesian;
@@ -67,7 +67,7 @@ inline void ConvertENUToLLA(const Eigen::Vector3d& init_lla,
                             point_lla->data()[0], point_lla->data()[1], point_lla->data()[2]);
 }
 
-inline Eigen::Matrix3d SkewMatrix(const Eigen::Vector3d& v) {
+inline Eigen::Matrix3d skew_matrix(const Eigen::Vector3d& v) {
     Eigen::Matrix3d w;
     w <<  0.,   -v(2),  v(1),
           v(2),  0.,   -v(0),

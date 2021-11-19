@@ -3,8 +3,6 @@
 
 #include "../include/utils.h"
 
-
-
 class ESKF
 {
 public:
@@ -20,7 +18,7 @@ public:
     bool process_GNSS_Data(GNSSDataPtr gnss_data_ptr);
     bool initialize(void);
     void predict(IMUDataPtr last_imu_ptr, IMUDataPtr cur_imu_ptr);
-    void update(GNSSDataPtr gnss_ptr);
+    void update(GNSSDataPtr gnss_data_ptr);
 
 private:
     double acc_noise_;
