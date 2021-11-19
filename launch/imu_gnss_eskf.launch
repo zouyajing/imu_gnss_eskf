@@ -1,0 +1,17 @@
+<launch>
+    <param name="acc_noise"       type="double" value="1e-2" />
+    <param name="gyr_noise"       type="double" value="1e-4" />
+    <param name="acc_bias_noise"  type="double" value="1e-6" />
+    <param name="gyr_bias_noise"  type="double" value="1e-8" />
+    <param name = "p_I_GNSS_x"    type="double" value="0."/>
+    <param name = "p_I_GNSS_y"    type="double" value="0."/>
+    <param name = "p_I_GNSS_z"    type="double" value="0."/>
+
+    <node name="nmea_topic_driver" pkg="nmea_navsat_driver" type="nmea_topic_driver" output="screen" />
+    
+    <node name="imu_gnss_eskf_node" pkg="imu_gnss_eskf" type="imu_gnss_eskf_node" output="screen" />
+
+    <node pkg="rviz" type="rviz" name="rviz" output="screen" 
+      args="-d $(find imu_gnss_eskf)/rviz/imu_gnss_eskf.rviz" required="true">
+    </node>
+</launch>
