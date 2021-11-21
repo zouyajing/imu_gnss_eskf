@@ -31,11 +31,11 @@ catkin_make
 ````
 ### 3. Run with EU dataset
 
-Run the following launch file:
+Run the following launch file
 ````
 roslaunch imu_gnss_eskf imu_gnss_eskf.launch
 ````
-Play the following bag file:
+Play the following bag file
 ````
 rosbag play utbm_robocar_dataset_**.bag
 ````
