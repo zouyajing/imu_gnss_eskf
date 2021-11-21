@@ -78,6 +78,21 @@ inline Eigen::Matrix3d skew_matrix(const Eigen::Vector3d& v) {
     return w;
 }
 
+inline Eigen::Matrix3d v_expmap(Eigen::Vector3d x){
+    Eigen::Vector3d w;
+    double theta, theta2, theta3;
+    Eigen::Matrix3d W, I, V;
+    w << x(0), x(1), x(2);
+    theta = w.norm();   theta2 = theta*theta; theta3 = theta2*theta;
+    W = skew_matrix(w);
+    I << 1, 0, 0, 0, 1, 0, 0, 0, 1;
+    if(theta>0.00000001)
+        V << I + ((1-cos(theta))/theta2)*W + ((theta-sin(theta))/theta3)*W*W;
+    else
+        V << I;
+    return V;
+}
+
 
 
 #endif // UTILS_H

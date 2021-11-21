@@ -122,7 +122,7 @@ void ESKF::update(GNSSDataPtr gnss_data_ptr)
     state_ptr_->acc_bias  += delta_x.block<3, 1>(9, 0);
     state_ptr_->gyro_bias += delta_x.block<3, 1>(12, 0);
     if (delta_x.block<3, 1>(6, 0).norm() > DBL_EPSILON) {
-        state_ptr_->R_G_I *= Eigen::AngleAxisd(delta_x.block<3, 1>(6, 0).norm(), delta_x.block<3, 1>(6, 0).normalized()).toRotationMatrix();
+        state_ptr_->R_G_I *= v_expmap(delta_x.block<3, 1>(6, 0));
     }
 
     // update covarance.
