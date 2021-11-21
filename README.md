@@ -15,13 +15,13 @@ The project is tested under Ubuntu 18.04 + ROS melodic.
 * Eigen is used for matrix computation.
 * GeographicLib is used for transformation between LLA and ENU.
 
-sudo apt-get install libeigen3-dev 
+  sudo apt-get install libeigen3-dev 
 
-sudo apt-get install ros-melodic-geographic-* geographiclib-* libgeographic-*
+  sudo apt-get install ros-melodic-geographic-* geographiclib-* libgeographic-*
 
-sudo apt-get install ros-melodic-nav-msgs ros-melodic-eigen-conversions ros-melodic-nmea-navsat-driver
+  sudo apt-get install ros-melodic-nav-msgs ros-melodic-eigen-conversions ros-melodic-nmea-navsat-driver
 
-sudo ln -s /usr/share/cmake/geographiclib/FindGeographicLib.cmake /usr/share/cmake-3**/Modules/ (* is the version of your cmake)
+  sudo ln -s /usr/share/cmake/geographiclib/FindGeographicLib.cmake /usr/share/cmake-3**/Modules/ (* is the version of your cmake)
 
 ### 2. Build
 
