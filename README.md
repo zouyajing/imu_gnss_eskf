@@ -10,7 +10,7 @@ The project is tested under Ubuntu 18.04 + ROS melodic.
 * nmea_navsat_driver is used for GNSS data processing.
 * Eigen is used for matrix computation.
 * GeographicLib is used for transformation between LLA and ENU.
-* ````
+ ````
   sudo apt-get install libeigen3-dev 
   sudo apt-get install ros-melodic-geographic-* geographiclib-* libgeographic-*
   sudo apt-get install ros-melodic-nav-msgs ros-melodic-eigen-conversions ros-melodic-nmea-navsat-driver
