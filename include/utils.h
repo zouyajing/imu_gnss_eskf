@@ -10,9 +10,6 @@
 #include <deque>
 #include <cfloat>
 
-
-
-
 constexpr double D_R = M_PI / 180.;
 constexpr double R_D = 180. / M_PI;
 constexpr double g = 9.81007;
@@ -92,7 +89,5 @@ inline Eigen::Matrix3d v_expmap(Eigen::Vector3d x){
         V << I;
     return V;
 }
-
-
 
 #endif // UTILS_H

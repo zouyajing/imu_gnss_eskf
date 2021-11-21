@@ -203,5 +203,3 @@ bool ESKF::initialize(void)
 
     return true;
 }
-
-
