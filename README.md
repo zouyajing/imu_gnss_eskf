@@ -12,10 +12,29 @@ The project is tested under UBUNTU 18.04 + ROS melodic.
 * GeographicLib is used for transformation between LLA and ENU.
 
 sudo apt-get install libeigen3-dev 
+
 sudo apt-get install ros-melodic-geographic-* geographiclib-* libgeographic-*
+
 sudo apt-get install ros-melodic-nav-msgs ros-melodic-eigen-conversions ros-melodic-nmea-navsat-driver
+
 sudo ln -s /usr/share/cmake/geographiclib/FindGeographicLib.cmake /usr/share/cmake-3**/Modules/ (* is the version of your cmake)
 
+### 2. Build
+
+Clone the repository to the catkin work space eg. `/catkin_ws/src`
+````
+git clone https://github.com/HKPolyU-UAV/FLVIS.git
+````
+Install 3rd Part library
+````
+cd catkin_ws/src/FLVIS/3rdPartLib/
+./install3rdPartLib.sh
+````
+Compile
+````
+cd ~/catkin_ws
+catkin_make
+````
 
 
 
