@@ -23,18 +23,24 @@ sudo ln -s /usr/share/cmake/geographiclib/FindGeographicLib.cmake /usr/share/cma
 
 Clone the repository to the catkin work space eg. `/catkin_ws/src`
 ````
-git clone https://github.com/HKPolyU-UAV/FLVIS.git
-````
-Install 3rd Part library
-````
-cd catkin_ws/src/FLVIS/3rdPartLib/
-./install3rdPartLib.sh
+git clone https://github.com/zouyajing/imu_gnss_eskf.git
 ````
 Compile
 ````
 cd ~/catkin_ws
 catkin_make
 ````
+### 3. Run with EU dataset
+
+Run the following launch file:
+````
+roslaunch imu_gnss_eskf imu_gnss_eskf.launch
+````
+Play the following bag file:
+````
+rosbag play utbm_robocar_dataset_**.bag
+````
+
 
 
 
