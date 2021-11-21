@@ -18,11 +18,9 @@ bool ESKF::process_IMU_Data(IMUDataPtr imu_data_ptr)
         if(imu_buffer_.size() > IMU_Buffer_Size) imu_buffer_.pop_front();
         return false;
     }
-    //std::cout<<"Initialized and predict."<<std::endl;
+
     predict(last_imu_ptr_, imu_data_ptr);
     last_imu_ptr_ = imu_data_ptr;
-
-
     return true;
 }
 
@@ -35,6 +33,7 @@ void ESKF::predict(IMUDataPtr last_imu_ptr, IMUDataPtr cur_imu_ptr)
 
     // timestamp
     state_ptr_->timestamp = cur_imu_ptr->timestamp;
+
     // p v R
     Eigen::Vector3d acc_unbias = 0.5 * (last_imu_ptr->acc + cur_imu_ptr->acc) - last_state.acc_bias;
     Eigen::Vector3d gyr_unbias = 0.5 * (last_imu_ptr->gyro + cur_imu_ptr->gyro) - last_state.gyro_bias;
@@ -48,7 +47,6 @@ void ESKF::predict(IMUDataPtr last_imu_ptr, IMUDataPtr cur_imu_ptr)
         dR = Eigen::AngleAxisd(delta_angle_axis.norm(), delta_angle_axis.normalized()).toRotationMatrix();
         state_ptr_->R_G_I = last_state.R_G_I * dR;
     }
-
 
     //Fx =
     //[I    I*dt    0    0    0]
@@ -78,11 +76,11 @@ void ESKF::predict(IMUDataPtr last_imu_ptr, IMUDataPtr cur_imu_ptr)
     Eigen::Matrix<double, 15, 12> Fi = Eigen::Matrix<double, 15, 12>::Zero();
     Fi.block<12, 12>(3, 0) = Eigen::Matrix<double, 12, 12>::Identity();
 
-
     //Qi =
     //[dt_2*acc_n    0    0    0]
     //[0    dt_2*gyr_n    0    0]
     //[0     0      dt*acc_w   0]
+    //[0     0       0  dt*gyo_w]
     Eigen::Matrix<double, 12, 12> Qi = Eigen::Matrix<double, 12, 12>::Zero();
     Qi.block<3, 3>(0, 0) = Eigen::Matrix3d::Identity() * dt_2 * acc_noise_;
     Qi.block<3, 3>(3, 3) = Eigen::Matrix3d::Identity() * dt_2 * gyro_noise_;
@@ -95,6 +93,9 @@ void ESKF::predict(IMUDataPtr last_imu_ptr, IMUDataPtr cur_imu_ptr)
 
 void ESKF::update(GNSSDataPtr gnss_data_ptr)
 {
+    //std::cout<<"[ ESKF ] GNSS and IMU timestamp: "<<gnss_data_ptr->timestamp<<", "<<state_ptr_->timestamp<<", "<<gnss_data_ptr->timestamp - state_ptr_->timestamp<<std::endl;
+    //double dt = gnss_data_ptr->timestamp - state_ptr_->timestamp;
+    //if(abs(dt) > 0.01) return;
     Eigen::Vector3d p_G_GNSS;
     convert_lla_to_enu(init_lla_, gnss_data_ptr->lla, &p_G_GNSS);
     Eigen::Vector3d &p_G_I = state_ptr_->p_G_I;
@@ -106,7 +107,6 @@ void ESKF::update(GNSSDataPtr gnss_data_ptr)
     H.block<3, 3>(0, 0) = Eigen::Matrix3d::Identity();
     H.block<3, 3>(0, 6) = - R_G_I * skew_matrix(p_I_GNSS_);
     Eigen::Matrix3d &V = gnss_data_ptr->cov;
-
 
     // ESKF
     // K = P * Ht * ( H * P * Ht + V).inverse();
@@ -144,11 +144,11 @@ bool ESKF::process_GNSS_Data(GNSSDataPtr gnss_data_ptr)
             std::cout<<"[ ESKF ] GNSS and IMU are not sychonized."<<std::endl;
             return false;
         }
-        bool ok = initialize();
-        if(!ok) return false;
+        if(!initialize()) return false;
         init_lla_ = gnss_data_ptr->lla;
         initialized_ = true;
     }
+
     update(gnss_data_ptr);
     return true;
 }

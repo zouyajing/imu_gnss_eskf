@@ -37,7 +37,7 @@ public:
         file_gnss_.open("/home/rick/gnss.csv");
         file_state_.open("/home/rick/fused_state.csv");
 
-        std::cout<<"[ESKF] Start."<<std::endl;
+        std::cout<<"[ ESKF ] Start."<<std::endl;
     }
     ~ESKF_Fusion()
     {
@@ -80,7 +80,7 @@ void ESKF_Fusion::gnss_callback(const sensor_msgs::NavSatFixConstPtr &gnss_msg)
 {
     if(gnss_msg->status.status != 2)
     {
-        std::cout<<"[ESKF] Bad GNSS data."<<std::endl;
+        std::cout<<"[ ESKF ] Bad GNSS data."<<std::endl;
         return;
     }
     GNSSDataPtr gnss_data_ptr = std::make_shared<GNSSData>();

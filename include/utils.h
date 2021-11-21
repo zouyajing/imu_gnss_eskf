@@ -21,6 +21,7 @@ constexpr double IMU_Std = 3.0;
 
 struct IMUData{
     double timestamp;
+
     Eigen::Vector3d acc;
     Eigen::Vector3d gyro;
 };
@@ -29,6 +30,7 @@ using IMUDataPtr = std::shared_ptr<IMUData>;
 struct GNSSData
 {
     double timestamp;
+
     Eigen::Vector3d lla;
     Eigen::Matrix3d cov;
 };
