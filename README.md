@@ -4,7 +4,7 @@ The project is to implement an ESKF algorithm to fuse IMU and GNSS data. The the
 
 ### 1. Requirements
 
-The project is tested under Ubuntu 18.04 + ROS melodic.
+It is tested under Ubuntu 18.04 + ROS melodic.
 * nav_msgs is used for ROS publishing. 
 * eigen_conversions is used for ROS publishing.
 * nmea_navsat_driver is used for GNSS data processing.
