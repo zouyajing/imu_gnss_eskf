@@ -137,6 +137,8 @@ void ESKF_Fusion::publish_save_state(void)
                 << q_G_I.x() << ", " << q_G_I.y() << ", " << q_G_I.z() << ", " << q_G_I.w() << ", "
                 << lla[0] << ", " << lla[1] << ", " << lla[2]
                 << std::endl;
+    std::cout << "bias of acc: "<<eskf_ptr_->state_ptr_->acc_bias.transpose()<<std::endl;
+    std::cout << "bias of gyr: "<<eskf_ptr_->state_ptr_->gyro_bias.transpose()<<std::endl;
 }
 
 int main(int argc, char **argv)
